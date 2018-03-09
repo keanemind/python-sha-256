@@ -13,8 +13,7 @@ K = [
 
 def generate_hash(message: bytearray):
     """Return a SHA-256 hash from the message passed.
-    The argument should be a bytes or bytearray object.
-    TODO: change all additions to be mod 2**32"""
+    The argument should be a bytes or bytearray object."""
     #if isinstance(message, str):
     #    int("".join([str(num) for num in bytes(message, "ascii")]))
     if isinstance(message, str):
@@ -66,7 +65,7 @@ def generate_hash(message: bytearray):
                 term4 = int.from_bytes(message_schedule[t-16], 'big')
 
                 # append a 4-byte byte object
-                schedule = (term1 + term2 + term3 + term4).to_bytes(4, 'big')
+                schedule = ((term1 + term2 + term3 + term4) % 2**32).to_bytes(4, 'big')
                 message_schedule.append(schedule)
 
         assert len(message_schedule) == 64
@@ -83,29 +82,29 @@ def generate_hash(message: bytearray):
 
         # Iterate for t=0 to 63
         for t in range(64):
-            t1 = (h + _capsigma1(e) + _ch(e, f, g) +
-                  K[t] + int.from_bytes(message_schedule[t], 'big'))
+            t1 = ((h + _capsigma1(e) + _ch(e, f, g) + K[t] +
+                   int.from_bytes(message_schedule[t], 'big')) % 2**32)
 
-            t2 = _capsigma0(a) + _maj(a, b, c)
+            t2 = (_capsigma0(a) + _maj(a, b, c)) % 2**32
 
             h = g
             g = f
             f = e
-            e = d + t1
+            e = (d + t1) % 2**32
             d = c
             c = b
             b = a
-            a = t1 + t2
+            a = (t1 + t2) % 2**32
 
         # Find new hash value
-        h0 += a
-        h1 += b
-        h2 += c
-        h3 += d
-        h4 += e
-        h5 += f
-        h6 += g
-        h7 += h
+        h0 = (h0 + a) % 2**32
+        h1 = (h1 + b) % 2**32
+        h2 = (h2 + c) % 2**32
+        h3 = (h3 + d) % 2**32
+        h4 = (h4 + e) % 2**32
+        h5 = (h5 + f) % 2**32
+        h6 = (h6 + g) % 2**32
+        h7 = (h7 + h) % 2**32
 
     return ((h0).to_bytes(4, 'big') + (h1).to_bytes(4, 'big') +
             (h2).to_bytes(4, 'big') + (h3).to_bytes(4, 'big') +
