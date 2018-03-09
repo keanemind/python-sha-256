@@ -13,7 +13,8 @@ K = [
 
 def generate_hash(message: bytearray):
     """Return a SHA-256 hash from the message passed.
-    The argument should be a bytes or bytearray object."""
+    The argument should be a bytes, bytearray, or
+    string object."""
     #if isinstance(message, str):
     #    int("".join([str(num) for num in bytes(message, "ascii")]))
     if isinstance(message, str):
