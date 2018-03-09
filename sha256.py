@@ -13,23 +13,28 @@ K = [
 
 def generate_hash(message: bytearray):
     """Return a SHA-256 hash from the message passed.
-    The argument should be a bytes or bytearray object.'"""
+    The argument should be a bytes or bytearray object.
+    TODO: change all additions to be mod 2**32"""
     #if isinstance(message, str):
     #    int("".join([str(num) for num in bytes(message, "ascii")]))
-    if not isinstance(message, bytearray):
+    if isinstance(message, str):
+        message = bytearray(message, 'ascii')
+    elif isinstance(message, bytes):
         message = bytearray(message)
+    else:
+        raise TypeError
 
     # Padding
 
     # len(message) is number of BYTES!!!
     length = len(message) * 8 # number of bits the message takes
-    message.append(128)
+    message.append(0x80)
     while (len(message) * 8 + 64) % 512 != 0:
-        message.append(0)
+        message.append(0x00)
 
-    message.append(length.to_bytes(64))
+    message += length.to_bytes(8, 'big') # pad to 8 bytes or 64 bits
 
-    assert len(message) % 512 == 0, "Padding did not complete properly!"
+    assert (len(message) * 8) % 512 == 0, "Padding did not complete properly!"
 
     # Parsing
     blocks = [] # contains 512-bit chunks of message
@@ -48,17 +53,17 @@ def generate_hash(message: bytearray):
     for message_block in blocks:
         # Prepare message schedule
         message_schedule = []
-        for t in range(0, 64, 4):
+        for t in range(0, 64):
             if t <= 15:
                 # adds the t'th 32 bit word of the block,
                 # starting from leftmost word
                 # 4 bytes at a time
-                message_schedule.append(bytes(message_block[t:t+4]))
+                message_schedule.append(bytes(message_block[t*4:(t*4)+4]))
             else:
                 term1 = _sigma1(int.from_bytes(message_schedule[t-2], 'big'))
                 term2 = int.from_bytes(message_schedule[t-7], 'big')
                 term3 = _sigma0(int.from_bytes(message_schedule[t-15], 'big'))
-                term4 = int.from_bytes(message_schedule[t-16])
+                term4 = int.from_bytes(message_schedule[t-16], 'big')
 
                 # append a 4-byte byte object
                 schedule = (term1 + term2 + term3 + term4).to_bytes(4, 'big')
@@ -90,7 +95,7 @@ def generate_hash(message: bytearray):
             d = c
             c = b
             b = a
-            a = t1 + t2 # need to change addition to add modulos
+            a = t1 + t2
 
         # Find new hash value
         h0 += a
@@ -146,3 +151,6 @@ def _maj(x: int, y: int, z: int):
 def _rotate_right(num: int, shift: int, size: int = 32):
     """Rotate an integer right."""
     return (num >> shift) | (num << size - shift)
+
+if __name__ == "__main__":
+    print(generate_hash("Hello").hex())
