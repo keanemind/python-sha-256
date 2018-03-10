@@ -21,7 +21,7 @@ def generate_hash(message: bytearray):
         message = bytearray(message, 'ascii')
     elif isinstance(message, bytes):
         message = bytearray(message)
-    else:
+    elif not isinstance(message, bytearray):
         raise TypeError
 
     # Padding
