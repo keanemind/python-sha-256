@@ -16,8 +16,7 @@ def generate_hash(message: bytearray) -> bytearray:
     """Return a SHA-256 hash from the message passed.
     The argument should be a bytes, bytearray, or
     string object."""
-    #if isinstance(message, str):
-    #    int("".join([str(num) for num in bytes(message, "ascii")]))
+
     if isinstance(message, str):
         message = bytearray(message, 'ascii')
     elif isinstance(message, bytes):
@@ -26,9 +25,7 @@ def generate_hash(message: bytearray) -> bytearray:
         raise TypeError
 
     # Padding
-
-    # len(message) is number of BYTES!!!
-    length = len(message) * 8 # number of bits the message takes
+    length = len(message) * 8 # len(message) is number of BYTES!!!
     message.append(0x80)
     while (len(message) * 8 + 64) % 512 != 0:
         message.append(0x00)
@@ -42,6 +39,7 @@ def generate_hash(message: bytearray) -> bytearray:
     for i in range(0, len(message), 64): # 64 bytes is 512 bits
         blocks.append(message[i:i+64])
 
+    # Setting Initial Hash Value
     h0 = 0x6a09e667
     h1 = 0xbb67ae85
     h2 = 0x3c6ef372
@@ -51,6 +49,7 @@ def generate_hash(message: bytearray) -> bytearray:
     h6 = 0x1f83d9ab
     h7 = 0x5be0cd19
 
+    # SHA-256 Hash Computation
     for message_block in blocks:
         # Prepare message schedule
         message_schedule = []
@@ -98,7 +97,7 @@ def generate_hash(message: bytearray) -> bytearray:
             b = a
             a = (t1 + t2) % 2**32
 
-        # Find new hash value
+        # Compute intermediate hash value
         h0 = (h0 + a) % 2**32
         h1 = (h1 + b) % 2**32
         h2 = (h2 + c) % 2**32
